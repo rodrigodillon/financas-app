@@ -1,29 +1,46 @@
 import React from 'react'
 import Card from '../components/card';
 import FormGroup from '../components/form-group';
+import {withRouter} from 'react-router-dom'
 
-
-
+import UsuarioService from '../app/service/usuarioService';
+import LocalStorageService from '../app/service/localstorageService';
+import {mensagemErro } from '../components/toastr'
+import {AuthContext} from "../main/provedorAutenticacao";
 
 
 class Login extends React.Component {
 
     state = {
         email: '',
-        senha: ''
+        senha: '',
     }
 
-
+    constructor () {
+        super();
+        this.service = new UsuarioService();
+    }
 
     entrar = () => {
-        console.log('Email', this.state.email)
-        console.log('Senha', this.state.senha)
+        this.service.autenticar({
+            email : this.state.email,
+            senha : this.state.senha
+        }).then(response => {
+                this.context.iniciarSessao(response.data)
+                this.props.history.push('/home')
+        }).catch( err => {
+            mensagemErro(err.response.data)
+        })
+        
+    }
+
+    prepareCadastro = () => {
+        this.props.history.push('/cadastro-usuarios')
     }
 
     render(){
 
         return (
-            <div className="container" >
                 <div className="row">
                     <div className="col-md-6" style={{position: ' relative', left: '300px'}}>
                         <div className="bs-docs-section">
@@ -36,7 +53,7 @@ class Login extends React.Component {
                                                     <input type="email"
                                                         value={this.state.email}
                                                         onChange={e => this.setState({email: e.target.value})}
-                                                        className="form-control" 
+                                                        className="form-control color"
                                                         id="exampleInputEmail1" 
                                                         aria-describedby="emailHelp" 
                                                         placeholder="Digite o Email"/>
@@ -45,12 +62,12 @@ class Login extends React.Component {
                                                     <input type="password" 
                                                         value={this.state.senha}
                                                         onChange={e => this.setState({senha: e.target.value})}
-                                                        className="form-control" 
+                                                        className="form-control color"
                                                         id="exampleInputPassword1" 
                                                         placeholder="Password"/>
                                                 </FormGroup>
-                                                <button onClick={this.entrar} className="btn btn-success">Entrar</button>
-                                                <button className="btn btn-danger">Cadastrar</button>
+                                                <button onClick={this.entrar} className="btn btn-success" style={{marginTop:"15px", marginRight:"15px"}}> <i className="pi pi-sign-in"/> Entrar</button>
+                                                <button onClick={this.prepareCadastro} className="btn btn-danger" style={{marginTop:"15px"}}> <i className="pi pi-plus"/> Cadastrar</button>
                                             </fieldset>
                                         </div>
                                     </div>
@@ -59,9 +76,10 @@ class Login extends React.Component {
                         </div>
                     </div>
                 </div>
-            </div>
         )
     }
 }
 
-export default Login;
+Login.contextType = AuthContext
+
+export default withRouter (Login);
